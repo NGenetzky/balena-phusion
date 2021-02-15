@@ -1,0 +1,6 @@
+
+# phusion/baseimage:bionic-1.0.0-arm64
+# Digest:sha256:bb6d180c0850d481a617883cb1da55c87fee52ddaf42eb9d11072b1bdbaf3e33
+ARG FROM_IMAGE="phusion/baseimage:bionic-1.0.0-arm64@sha256:bb6d180c0850d481a617883cb1da55c87fee52ddaf42eb9d11072b1bdbaf3e33"
+
+FROM "${FROM_IMAGE}"
