@@ -1,9 +1,21 @@
-
-# phusion/baseimage:bionic-1.0.0-arm64
-# Digest:sha256:bb6d180c0850d481a617883cb1da55c87fee52ddaf42eb9d11072b1bdbaf3e33
-ARG FROM_IMAGE="phusion/baseimage:bionic-1.0.0-arm64@sha256:bb6d180c0850d481a617883cb1da55c87fee52ddaf42eb9d11072b1bdbaf3e33"
+# phusion/baseimage:bionic-1.0.0-amd64
+# Digest:sha256:0481bb9b387564c43bd5d44cacf44efb492fd1e7bd1716e849262036b69c030c
+ARG FROM_IMAGE="phusion/baseimage:bionic-1.0.0-amd64@sha256:0481bb9b387564c43bd5d44cacf44efb492fd1e7bd1716e849262036b69c030c"
 
 FROM "${FROM_IMAGE}"
+
+ARG REQ_DIR="/usr/src/req/"
+ARG REQ_APT_APPEND="locales"
+
+COPY src/req/ "${REQ_DIR}"
+RUN apt-get -q update && export DEBIAN_FRONTEND=noninteractive && \
+    mkdir -p "${REQ_DIR}" && \
+    echo "$REQ_APT_APPEND" | sed -E -e 's/[[:blank:]]+/\n/g' >> "${REQ_DIR}/apt.txt" && \
+    awk '! /^ *(#|$)/' "${REQ_DIR}/apt.txt" | \
+        xargs -r -- apt-get --no-install-recommends -yq install && \
+    # Clean up
+    apt-get autoremove -y && apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb /root/.cache/*
 
 # Configuration for default non-root user.
 ARG USERNAME='user'
@@ -61,4 +73,3 @@ RUN \
     # init system will auto-generate one during boot.
     && '/etc/my_init.d/00_regen_ssh_host_keys.sh'
 EXPOSE 22
-
