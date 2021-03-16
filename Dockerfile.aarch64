@@ -38,8 +38,10 @@ RUN printf "### Building image for user %s (%s:%s) ###" \
         "/work/" "/srv/" "/opt/"
 
 ARG SSH_AUTHKEYS_URL="https://github.com/NGenetzky.keys"
+ARG SSH_USER_PASS="*"
 RUN \
     echo "AllowAgentForwarding yes" >> '/etc/ssh/sshd_config' \
+    && usermod -p "${SSH_USER_PASS}" "${USERNAME}" \
     ## ssh authorized key management
     && install -m '0700' \
         -o "${USER_UID}" -g "${USER_GID}" \
@@ -59,3 +61,4 @@ RUN \
     # init system will auto-generate one during boot.
     && '/etc/my_init.d/00_regen_ssh_host_keys.sh'
 EXPOSE 22
+
