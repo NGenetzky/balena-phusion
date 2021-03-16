@@ -4,3 +4,58 @@
 ARG FROM_IMAGE="phusion/baseimage:bionic-1.0.0-arm64@sha256:bb6d180c0850d481a617883cb1da55c87fee52ddaf42eb9d11072b1bdbaf3e33"
 
 FROM "${FROM_IMAGE}"
+
+# Configuration for default non-root user.
+ARG USERNAME='user'
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+# Extra user config:
+ARG USER_SHELL='/bin/bash'
+
+# Create non-root user and give them sudo with nopasswd.
+RUN printf "### Building image for user %s (%s:%s) ###" \
+        "${USERNAME}" "${USER_UID}" "${USER_GID}" && \
+    # Create a non-root user.
+    groupadd --gid "$USER_GID" "$USERNAME" && \
+    useradd --create-home --shell "${USER_SHELL}" \
+        --uid "${USER_UID}" --gid "${USER_GID}" "${USERNAME}" && \
+    # Add sudo support for the non-root user
+    mkdir -p '/etc/sudoers.d/' && \
+    echo "$USERNAME ALL=(root) NOPASSWD:ALL" > "/etc/sudoers.d/$USERNAME" && \
+    chmod 0440 "/etc/sudoers.d/$USERNAME" && \
+    #
+    # Setup directories for home user
+    install -d --mode 0755 --owner "${USER_UID}" --group "${USER_GID}" \
+        # 'bin' for XDG Base Directory Specification
+        # https://www.freedesktop.org/software/systemd/man/file-hierarchy.html#Home%20Directory
+        "/home/$USERNAME/.local/" \
+        "/home/$USERNAME/.local/bin" \
+        "/home/$USERNAME/.local/share" \
+        "/home/$USERNAME/.local/src" \
+        "/home/$USERNAME/bin" \
+        && \
+    install -d --mode 0755 --owner "${USER_UID}" --group "${USER_GID}" \
+        "/work/" "/srv/" "/opt/"
+
+ARG SSH_AUTHKEYS_URL="https://github.com/NGenetzky.keys"
+RUN \
+    echo "AllowAgentForwarding yes" >> '/etc/ssh/sshd_config' \
+    ## ssh authorized key management
+    && install -m '0700' \
+        -o "${USER_UID}" -g "${USER_GID}" \
+        -d "/home/${USERNAME}/.ssh/" \
+    # && wget "${SSH_AUTHKEYS_URL}" -O "/tmp/authorized_keys" \
+    && curl "${SSH_AUTHKEYS_URL}" > "/tmp/authorized_keys" \
+    && install -T -m '0600' \
+        -o "${USER_UID}" -g "${USER_GID}" \
+        "/tmp/authorized_keys" \
+        "/home/${USERNAME}/.ssh/authorized_keys" \
+    && rm "/tmp/authorized_keys" \
+    #####
+    # WARNING: Phusion magic here
+    && rm -f '/etc/service/sshd/down' \
+    # Regenerate SSH host keys. baseimage-docker does not contain any, so you
+    # have to do that yourself. You may also comment out this instruction; the
+    # init system will auto-generate one during boot.
+    && '/etc/my_init.d/00_regen_ssh_host_keys.sh'
+EXPOSE 22
