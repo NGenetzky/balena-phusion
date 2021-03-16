@@ -4,7 +4,6 @@ cpio
 debianutils
 diffstat
 gawk
-gcc-multilib
 git-core
 iputils-ping
 libffi-dev
