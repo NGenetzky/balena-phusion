@@ -3,6 +3,7 @@ chrpath
 cpio
 debianutils
 diffstat
+file
 gawk
 git-core
 iputils-ping
