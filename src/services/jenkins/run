@@ -1,0 +1,13 @@
+#!/bin/sh
+#exec java -Dhudson.DNSMultiCast.disabled=true -Dhudson.udp=-1 -jar /usr/src/app/jenkins.war &
+
+export NAME="jenkins"
+#export JENKINS_HOME="/var/lib/$NAME"
+export JENKINS_HOME="/data/$NAME"
+export JENKINS_LOG=daemon.info
+
+echo "[ JENKINS ] : Starting Jenkins master ..."
+exec java \
+    -Dhudson.DNSMultiCast.disabled=true \
+    -Dhudson.udp=-1 \
+    -jar /usr/share/java/jenkins.war

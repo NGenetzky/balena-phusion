@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "[ JENKINS ] : Starting Jenkins slave/agent: '{$SLAVENAME}' ..."
+exec java -jar /usr/src/app/agent.jar -jnlpUrl http://$MASTER_IP:$MASTER_PORT/computer/$SLAVE_NAME/slave-agent.jnlp -secret $MASTER_SECRET -workDir $SLAVE_WORK_DIR -noReconnect &
